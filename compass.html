@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>由心而发 · 品牌认知罗盘</title>
+    <meta name="description" content="一个由心出发、指向用户认知的交互式品牌方法论罗盘。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0b0b14;
+            --bg-mid: #12121f;
+            --bg-panel: #151522;
+            --copper: #c8a86b;
+            --copper-light: #e8c98a;
+            --copper-dim: #8a6d45;
+            --gold: #d4a854;
+            --gold-soft: rgba(212, 168, 84, 0.55);
+            --text: #e8e4dc;
+            --text-dim: #9a948a;
+            --text-faint: #6e685e;
+            --ring-red-1: #a04a3a;
+            --ring-red-2: #b35845;
+            --ring-green: #5a8068;
+            --ring-blue: #5a7290;
+            --pointer-red: #7a3530;
+            --pointer-green: #3d554c;
+            --pointer-blue: #354559;
+            --pointer-ochre: #8a5c35;
+            --serif: "Noto Serif SC", "Songti SC", "STSong", "Georgia", serif;
+            --calig: "Ma Shan Zheng", "Noto Serif SC", serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse 70% 55% at 50% 45%,
+                    rgba(212, 168, 84, 0.07) 0%,
+                    rgba(110, 80, 40, 0.035) 30%,
+                    transparent 65%),
+                radial-gradient(circle at 18% 20%, rgba(160, 74, 58, 0.04) 0%, transparent 24%),
+                radial-gradient(circle at 82% 78%, rgba(90, 128, 104, 0.04) 0%, transparent 26%),
+                linear-gradient(155deg, #151522 0%, #0b0b14 45%, #080810 100%);
+            background-attachment: fixed;
+            color: var(--text);
+            font-family: var(--serif);
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(200, 168, 107, 0.018) 0 1px, transparent 1px 3px),
+                repeating-linear-gradient(90deg, rgba(200, 168, 107, 0.012) 0 1px, transparent 1px 4px);
+            mix-blend-mode: overlay;
+            z-index: 0;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .header h1 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: var(--copper-light);
+        }
+
+        .header .sub {
+            font-size: 0.6rem;
+            color: var(--copper-dim);
+            letter-spacing: 0.2em;
+            margin-top: 4px;
+        }
+
+        .stage {
+            position: relative;
+            width: min(88vw, 78vh, 620px);
+            aspect-ratio: 1;
+            filter: drop-shadow(0 28px 42px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 46px rgba(212, 168, 84, 0.06));
+            animation: stage-intro 1.1s ease-out both;
+        }
+
+        @keyframes stage-intro {
+            from {
+                opacity: 0;
+                scale: 0.96;
+            }
+            to {
+                opacity: 1;
+                scale: 1;
+            }
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            touch-action: none;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        canvas.dragging {
+            cursor: grabbing;
+        }
+
+        .hint {
+            font-size: 0.58rem;
+            color: var(--text-faint);
+            letter-spacing: 0.15em;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 680px) {
+            .stage {
+                width: min(94vw, 72vh, 500px);
+            }
+            .header h1 {
+                font-size: 0.95rem;
+                letter-spacing: 0.18em;
+            }
+            .header .sub {
+                font-size: 0.52rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                scroll-behavior: auto !important;
+            }
+            .stage {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <div class="header">
+            <h1>品牌认知罗盘</h1>
+            <div class="sub">由心而发 · 指向用户认知</div>
+        </div>
+        <section class="stage" aria-label="交互式品牌认知罗盘">
+            <canvas id="compass" role="img" aria-label="从圆心的心出发，穿过四个可旋转的品牌认知环，指向用户认知。可拖动各圆环。" tabindex="0"></canvas>
+        </section>
+        <div class="hint">拖转圆环 · 指针读心</div>
+    </main>
+
+    <script>
+        (() => {
+            'use strict';
+
+            const canvas = document.getElementById('compass');
+            const ctx = canvas.getContext('2d');
+            const TAU = Math.PI * 2;
+            const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const C = {
+                bg: '#0b0b14',
+                bgMid: '#12121f',
+                bgPanel: '#151522',
+                copper: '#c8a86b',
+                copperLight: '#e8c98a',
+                copperDim: '#8a6d45',
+                gold: '#d4a854',
+                goldSoft: 'rgba(212, 168, 84, 0.55)',
+                text: '#e8e4dc',
+                textDim: '#9a948a',
+                textFaint: '#6e685e',
+                ringRed1: '#a04a3a',
+                ringRed2: '#b35845',
+                ringGreen: '#5a8068',
+                ringBlue: '#5a7290',
+                pointerRed: '#7a3530',
+                pointerGreen: '#3d554c',
+                pointerBlue: '#354559',
+                pointerOchre: '#8a5c35',
+                needleBase: '#2e1b14',
+            };
+
+            const FONT_SERIF = '"Noto Serif SC", "Songti SC", "STSong", "Georgia", serif';
+            const FONT_CALIG = '"Ma Shan Zheng", "Noto Serif SC", serif';
+
+            const rings = [{
+                name: '第三环',
+                inner: .235,
+                outer: .385,
+                speed: .000045,
+                angle: Math.PI / 8,
+                color: C.ringRed1,
+                bgFill: 'rgba(160, 74, 58, 0.16)',
+                labels: ['品类首选', '验证价值', '场景专案', '代际替代', '信任资产', '群体共识', '情绪共鸣', '身份价值']
+            }, {
+                name: '第四环',
+                inner: .385,
+                outer: .535,
+                speed: .000032,
+                angle: Math.PI / 6,
+                color: C.ringRed2,
+                bgFill: 'rgba(179, 88, 69, 0.14)',
+                labels: ['角色属性', '能力属性', '人格属性', '关系属性', '文化属性', '用户镜像']
+            }, {
+                name: '工艺环',
+                inner: .535,
+                outer: .685,
+                speed: .000022,
+                angle: Math.PI / 8,
+                color: C.ringGreen,
+                bgFill: 'rgba(90, 128, 104, 0.15)',
+                labels: ['动态', '色彩', '轮廓', '图像', '版式', '符号', '文字', '工艺']
+            }, {
+                name: '第六环',
+                inner: .685,
+                outer: .835,
+                speed: .000014,
+                angle: Math.PI / 6,
+                color: C.ringBlue,
+                bgFill: 'rgba(90, 114, 144, 0.14)',
+                labels: ['感知入口', '清晰理解', '承接行动', '兑现承诺', '稳定积累', '轻松复述']
+            }];
+
+            const pointerLabels = ['与你何干', '你看见', '你相信', '你选择'];
+            let size = 600;
+            let radius = 280;
+            let dpr = 1;
+            let lastTime = performance.now();
+            let paused = reduceMotion;
+            let drag = null;
+            let hoverRing = -1;
+            let lastInteraction = 0;
+            let fontsReady = false;
+
+            const speckles = [];
+            const microScratches = [];
+
+            function initTextures() {
+                for (let i = 0; i < 130; i++) {
+                    speckles.push({
+                        angle: Math.random() * TAU,
+                        rr: .06 + Math.random() * .92,
+                        dotR: .0007 + Math.random() * .002,
+                        alpha: .02 + Math.random() * .06,
+                        warm: Math.random() > .5
+                    });
+                }
+                for (let i = 0; i < 10; i++) {
+                    microScratches.push({
+                        startAngle: Math.random() * TAU,
+                        arcLen: .005 + Math.random() * .022,
+                        rr: .16 + Math.random() * .76,
+                        alpha: .015 + Math.random() * .04,
+                        dir: Math.random() > .5 ? 1 : -1
+                    });
+                }
+            }
+            initTextures();
+
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                dpr = Math.min(devicePixelRatio || 1, 2);
+                canvas.width = Math.round(rect.width * dpr);
+                canvas.height = Math.round(rect.height * dpr);
+                size = Math.min(rect.width, rect.height);
+                radius = size * .475;
+                draw();
+            }
+
+            function polar(angle, r) {
+                return [Math.cos(angle) * r, Math.sin(angle) * r];
+            }
+
+            function modelFontSize() {
+                return Math.max(9.5, radius * .034);
+            }
+
+            function pointerFontSize() {
+                return Math.max(7.5, radius * .023);
+            }
+
+            function heartFontSize() {
+                return Math.max(13, radius * .052);
+            }
+
+            function shade(hex, amount) {
+                const n = parseInt(hex.slice(1), 16);
+                const r = Math.max(0, Math.min(255, (n >> 16) + amount));
+                const g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amount));
+                const b = Math.max(0, Math.min(255, (n & 255) + amount));
+                return `rgb(${r},${g},${b})`;
+            }
+
+            function annularSegment(innerR, outerR, start, end) {
+                ctx.beginPath();
+                ctx.arc(0, 0, outerR, start, end);
+                ctx.arc(0, 0, innerR, end, start, true);
+                ctx.closePath();
+            }
+
+            function circle(r, fill, stroke = null, width = 1) {
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, TAU);
+                if (fill) { ctx.fillStyle = fill;
+                    ctx.fill(); }
+                if (stroke) { ctx.lineWidth = width;
+                    ctx.strokeStyle = stroke;
+                    ctx.stroke(); }
+            }
+
+            function drawEngravedRadialText(text, angle, r, fontSize, weight = 600, fontFamily = FONT_SERIF,
+                mainColor = C.copperLight) {
+                const [x, y] = polar(angle, r);
+                // 暗影
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, fontSize * .045, fontSize * .035);
+                ctx.restore();
+                // 高光
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.fillStyle = 'rgba(255,240,210,0.45)';
+                ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, -fontSize * .03, -fontSize * .025);
+                ctx.restore();
+                // 主文字
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.fillStyle = mainColor;
+                ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, 0, 0);
+                ctx.restore();
+            }
+
+            function drawCopperDisc() {
+                const g = ctx.createRadialGradient(-radius * .28, -radius * .3, radius * .05, 0, 0, radius);
+                g.addColorStop(0, '#3a2a1c');
+                g.addColorStop(.18, '#2c1f14');
+                g.addColorStop(.38, '#1e1610');
+                g.addColorStop(.58, '#15110c');
+                g.addColorStop(.78, '#0e0c08');
+                g.addColorStop(1, '#080806');
+
+                ctx.shadowColor = 'rgba(0,0,0,0.7)';
+                ctx.shadowBlur = radius * .07;
+                ctx.shadowOffsetY = radius * .04;
+                circle(radius, g, C.copper, Math.max(1.8, radius * .007));
+                ctx.shadowColor = 'transparent';
+
+                if (typeof ctx.createConicGradient === 'function') {
+                    const sheen = ctx.createConicGradient(-Math.PI * .7, 0, 0);
+                    sheen.addColorStop(0, 'rgba(232,201,138,0.012)');
+                    sheen.addColorStop(.08, 'rgba(232,201,138,0.13)');
+                    sheen.addColorStop(.16, 'rgba(232,201,138,0.022)');
+                    sheen.addColorStop(.3, 'rgba(0,0,0,0.12)');
+                    sheen.addColorStop(.45, 'rgba(212,168,84,0.07)');
+                    sheen.addColorStop(.6, 'rgba(0,0,0,0.14)');
+                    sheen.addColorStop(.76, 'rgba(232,201,138,0.045)');
+                    sheen.addColorStop(.88, 'rgba(0,0,0,0.11)');
+                    sheen.addColorStop(1, 'rgba(232,201,138,0.012)');
+                    circle(radius * .992, sheen);
+                }
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * .99, 0, TAU);
+                ctx.clip();
+
+                for (let i = 0; i < 58; i++) {
+                    const rr = radius * (.07 + i * .0152);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, rr, 0, TAU);
+                    ctx.strokeStyle = i % 3 === 0 ?
+                        'rgba(232,201,138,0.02)' :
+                        'rgba(0,0,0,0.032)';
+                    ctx.lineWidth = .4 + (i % 4) * .11;
+                    ctx.stroke();
+                }
+
+                for (const sp of speckles) {
+                    const [sx, sy] = polar(sp.angle, radius * sp.rr);
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, radius * sp.dotR, 0, TAU);
+                    ctx.fillStyle = sp.warm ?
+                        `rgba(232,201,138,${sp.alpha})` :
+                        `rgba(0,0,0,${sp.alpha * 1.15})`;
+                    ctx.fill();
+                }
+
+                for (const sc of microScratches) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius * sc.rr, sc.startAngle, sc.startAngle + sc.arcLen * sc.dir);
+                    ctx.strokeStyle = `rgba(232,201,138,${sc.alpha})`;
+                    ctx.lineWidth = radius * .0005;
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                const rimGlow = ctx.createRadialGradient(0, 0, radius * .92, 0, 0, radius);
+                rimGlow.addColorStop(0, 'rgba(0,0,0,0)');
+                rimGlow.addColorStop(.7, 'rgba(0,0,0,0.11)');
+                rimGlow.addColorStop(.9, 'rgba(232,201,138,0.065)');
+                rimGlow.addColorStop(1, 'rgba(0,0,0,0.28)');
+                circle(radius * .995, rimGlow);
+                circle(radius * .985, null, 'rgba(232,201,138,0.35)', radius * .0015);
+                circle(radius * .998, null, 'rgba(0,0,0,0.38)', radius * .0018);
+            }
+
+            function drawArcText(text, start, end, r, fontSize) {
+                const chars = [...text];
+                const step = (end - start) / Math.max(1, chars.length - 1);
+                chars.forEach((char, i) => {
+                    const a = start + step * i;
+                    drawEngravedRadialText(char, a, r, fontSize, 600, FONT_SERIF, C.copperLight);
+                });
+            }
+
+            function drawOuterFixed() {
+                const inner = radius * .835;
+                const outer = radius * .995;
+                const wash = ctx.createRadialGradient(0, 0, inner, 0, 0, outer);
+                wash.addColorStop(0, 'rgba(0,0,0,0.05)');
+                wash.addColorStop(.5, 'rgba(212,168,84,0.03)');
+                wash.addColorStop(.84, 'rgba(0,0,0,0.15)');
+                wash.addColorStop(1, 'rgba(0,0,0,0.26)');
+                annularSegment(inner, outer, 0, TAU);
+                ctx.fillStyle = wash;
+                ctx.fill();
+                circle(inner, null, C.gold, radius * .004);
+                circle(inner + radius * .005, null, 'rgba(232,201,138,0.28)', radius * .001);
+                circle(outer, null, C.copperLight, radius * .0055);
+                circle(outer - radius * .005, null, 'rgba(232,201,138,0.23)', radius * .001);
+
+                const tickStart = inner + radius * .013;
+                const tickEnd = inner + radius * .026;
+                for (let i = 0; i < 72; i++) {
+                    const a = (i / 72) * TAU - Math.PI / 2;
+                    const [x1, y1] = polar(a, tickStart);
+                    const [x2, y2] = polar(a, tickEnd);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = i % 6 === 0 ?
+                        'rgba(232,201,138,0.4)' :
+                        'rgba(232,201,138,0.17)';
+                    ctx.lineWidth = i % 6 === 0 ? radius * .0024 : radius * .001;
+                    ctx.stroke();
+                }
+
+                const rr = radius * .918;
+                const phrase = '品牌之谓，不在自诩，而在人心；心有所立，向有所定，择路而行；行有所证，人有所认，品牌乃成';
+                drawArcText(phrase, -Math.PI / 2 + .075, Math.PI * 1.5 - .075, rr, modelFontSize());
+            }
+
+            function drawRing(ring, index) {
+                const inner = radius * ring.inner;
+                const outer = radius * ring.outer;
+                const n = ring.labels.length;
+                const step = TAU / n;
+                ctx.save();
+                ctx.rotate(ring.angle);
+
+                for (let i = 0; i < n; i++) {
+                    const start = -Math.PI / 2 - step / 2 + i * step;
+                    const end = start + step;
+                    annularSegment(inner, outer, start, end);
+                    const light = (i + index) % 2 === 0;
+                    ctx.fillStyle = light ? ring.bgFill : 'rgba(0,0,0,0.16)';
+                    ctx.fill();
+                    if (hoverRing === index || drag?.index === index) {
+                        ctx.fillStyle = ring.color + (drag?.index === index ? '32' : '1a');
+                        ctx.fill();
+                    }
+
+                    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+                    ctx.shadowBlur = radius * .003;
+                    ctx.shadowOffsetY = radius * .0015;
+                    ctx.strokeStyle = C.copper;
+                    ctx.lineWidth = Math.max(.8, radius * .0022);
+                    ctx.stroke();
+                    ctx.shadowColor = 'transparent';
+
+                    ctx.strokeStyle = 'rgba(232,201,138,0.3)';
+                    ctx.lineWidth = Math.max(.4, radius * .0008);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = Math.max(.3, radius * .0005);
+                    ctx.stroke();
+
+                    const mid = start + step / 2;
+                    drawEngravedRadialText(ring.labels[i], mid, (inner + outer) / 2, modelFontSize(), 600, FONT_SERIF, C
+                        .text);
+                }
+
+                circle(inner, null, C.copper, radius * .0035);
+                circle(inner - radius * .003, null, 'rgba(232,201,138,0.22)', radius * .0008);
+                circle(outer, null, C.copperLight, radius * .0035);
+                circle(outer + radius * .003, null, 'rgba(0,0,0,0.22)', radius * .0008);
+                ctx.restore();
+            }
+
+            function drawFixedCenter() {
+                const inner = radius * .075;
+                const outer = radius * .235;
+                const labels = ['我是何人→', '面向何人→', '所创价值→', '何以见得→'];
+                const centers = [-Math.PI / 4, Math.PI / 4, Math.PI * .75, Math.PI * 1.25];
+                annularSegment(inner, outer, 0, TAU);
+                const wash = ctx.createRadialGradient(0, 0, inner, 0, 0, outer);
+                wash.addColorStop(0, 'rgba(212,168,84,0.12)');
+                wash.addColorStop(.65, 'rgba(80,50,25,0.04)');
+                wash.addColorStop(1, 'rgba(0,0,0,0.11)');
+                ctx.fillStyle = wash;
+                ctx.fill();
+
+                circle(inner, null, C.copperLight, radius * .0035);
+                circle(inner - radius * .003, null, 'rgba(232,201,138,0.26)', radius * .0008);
+                circle(outer, null, C.copper, radius * .004);
+                circle(outer + radius * .003, null, 'rgba(0,0,0,0.2)', radius * .0008);
+
+                labels.forEach((label, i) => {
+                    drawEngravedRadialText(label, centers[i], radius * .158, modelFontSize(), 600, FONT_SERIF, C.text);
+                });
+            }
+
+            function needlePath() {
+                ctx.beginPath();
+                ctx.moveTo(0, -radius * .995);
+                ctx.bezierCurveTo(-radius * .013, -radius * .972, -radius * .019, -radius * .91, -radius * .024, -radius *
+                    .835);
+                ctx.bezierCurveTo(-radius * .029, -radius * .76, -radius * .020, -radius * .72, -radius * .031, -radius *
+                    .685);
+                ctx.bezierCurveTo(-radius * .046, -radius * .61, -radius * .023, -radius * .55, -radius * .035, -radius *
+                    .49);
+                ctx.bezierCurveTo(-radius * .056, -radius * .37, -radius * .033, -radius * .24, -radius * .057, -radius *
+                    .145);
+                ctx.bezierCurveTo(-radius * .064, -radius * .10, -radius * .044, -radius * .062, 0, -radius * .034);
+                ctx.bezierCurveTo(radius * .046, -radius * .062, radius * .063, -radius * .10, radius * .055, -radius *
+                    .145);
+                ctx.bezierCurveTo(radius * .034, -radius * .24, radius * .057, -radius * .37, radius * .035, -radius * .49);
+                ctx.bezierCurveTo(radius * .023, -radius * .55, radius * .046, -radius * .61, radius * .031, -radius * .685);
+                ctx.bezierCurveTo(radius * .020, -radius * .72, radius * .029, -radius * .76, radius * .024, -radius * .835);
+                ctx.bezierCurveTo(radius * .019, -radius * .91, radius * .013, -radius * .972, 0, -radius * .995);
+                ctx.closePath();
+            }
+
+            function drawNeedle() {
+                const colors = [C.pointerRed, C.pointerGreen, C.pointerBlue, C.pointerOchre];
+                const segments = [
+                    { inner: .038, outer: .535, labelAt: .455 },
+                    { inner: .535, outer: .685, labelAt: .61 },
+                    { inner: .685, outer: .835, labelAt: .76 },
+                    { inner: .835, outer: .995, labelAt: .915, tip: true }
+                ];
+
+                ctx.save();
+                needlePath();
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = radius * .032;
+                ctx.shadowOffsetX = radius * .018;
+                ctx.shadowOffsetY = radius * .022;
+                ctx.fillStyle = C.needleBase;
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+
+                ctx.save();
+                needlePath();
+                ctx.clip();
+
+                for (let i = 0; i < 4; i++) {
+                    const segment = segments[i];
+                    const yTop = -radius * segment.outer;
+                    const yBottom = -radius * segment.inner;
+                    const g = ctx.createLinearGradient(-radius * .06, 0, radius * .06, 0);
+                    g.addColorStop(0, shade(colors[i], -45));
+                    g.addColorStop(.18, shade(colors[i], -18));
+                    g.addColorStop(.38, shade(colors[i], 12));
+                    g.addColorStop(.52, shade(colors[i], 24));
+                    g.addColorStop(.68, shade(colors[i], 6));
+                    g.addColorStop(.84, shade(colors[i], -20));
+                    g.addColorStop(1, shade(colors[i], -48));
+                    ctx.fillStyle = g;
+                    ctx.fillRect(-radius * .08, yTop, radius * .16, yBottom - yTop + radius * .003);
+                }
+
+                const highlightGrad = ctx.createLinearGradient(-radius * .05, 0, -radius * .01, 0);
+                highlightGrad.addColorStop(0, 'rgba(255,255,255,0)');
+                highlightGrad.addColorStop(1, 'rgba(255,255,255,0.09)');
+                ctx.fillStyle = highlightGrad;
+                ctx.fillRect(-radius * .05, -radius * .995, radius * .04, radius * .96);
+
+                const shadowGrad = ctx.createLinearGradient(radius * .02, 0, radius * .06, 0);
+                shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                shadowGrad.addColorStop(1, 'rgba(0,0,0,0.16)');
+                ctx.fillStyle = shadowGrad;
+                ctx.fillRect(radius * .02, -radius * .995, radius * .04, radius * .96);
+                ctx.restore();
+
+                needlePath();
+                ctx.strokeStyle = C.copperLight;
+                ctx.lineWidth = Math.max(.9, radius * .0026);
+                ctx.stroke();
+
+                needlePath();
+                ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+                ctx.lineWidth = Math.max(.5, radius * .001);
+                ctx.setLineDash([radius * .006, radius * .008]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                [.535, .685, .835].forEach(bound => {
+                    const y = -radius * bound;
+                    ctx.beginPath();
+                    ctx.moveTo(-radius * .028, y);
+                    ctx.quadraticCurveTo(0, y - radius * .004, radius * .028, y);
+                    ctx.strokeStyle = 'rgba(232,201,138,0.45)';
+                    ctx.lineWidth = radius * .0015;
+                    ctx.stroke();
+                });
+
+                ctx.beginPath();
+                ctx.moveTo(0, -radius * .048);
+                ctx.bezierCurveTo(radius * .005, -radius * .27, -radius * .005, -radius * .58, 0, -radius * .97);
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.lineWidth = radius * .0014;
+                ctx.stroke();
+
+                const pFontSize = pointerFontSize();
+                for (let i = 0; i < 4; i++) {
+                    const y = -radius * segments[i].labelAt;
+                    ctx.save();
+                    ctx.translate(0, y);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                    ctx.font = `600 ${pFontSize}px ${FONT_SERIF}`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pointerLabels[i], pFontSize * .035, pFontSize * .025);
+                    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+                    ctx.fillText(pointerLabels[i], -pFontSize * .022, -pFontSize * .02);
+                    ctx.fillStyle = '#f0d8b0';
+                    ctx.fillText(pointerLabels[i], 0, 0);
+                    ctx.restore();
+                }
+                ctx.restore();
+
+                // 中心轮毂
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = radius * .018;
+                ctx.shadowOffsetY = radius * .007;
+                const hub = ctx.createRadialGradient(-radius * .014, -radius * .018, 0, 0, 0, radius * .068);
+                hub.addColorStop(0, '#e8c090');
+                hub.addColorStop(.36, '#bc8250');
+                hub.addColorStop(.66, '#854b34');
+                hub.addColorStop(.86, '#5c3022');
+                hub.addColorStop(1, '#351d14');
+                circle(radius * .068, hub, C.copperLight, radius * .0045);
+                ctx.shadowColor = 'transparent';
+
+                circle(radius * .052, 'rgba(55,28,16,0.1)', C.copper, radius * .0016);
+                circle(radius * .038, null, 'rgba(232,201,138,0.18)', radius * .0007);
+
+                const hFontSize = heartFontSize();
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.font = `600 ${hFontSize}px ${FONT_CALIG}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'alphabetic';
+                const hm = ctx.measureText('心');
+                const hBase = (hm.actualBoundingBoxAscent - hm.actualBoundingBoxDescent) / 2;
+                ctx.fillText('心', hFontSize * .035, hBase + hFontSize * .025);
+                ctx.fillStyle = 'rgba(255,245,220,0.6)';
+                ctx.fillText('心', -hFontSize * .022, hBase - hFontSize * .018);
+                ctx.fillStyle = '#f0d8a8';
+                ctx.fillText('心', 0, hBase);
+                ctx.restore();
+                ctx.restore();
+            }
+
+            function draw() {
+                if (!canvas.width || !canvas.height) return;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                const rect = canvas.getBoundingClientRect();
+                ctx.translate(rect.width / 2, rect.height / 2);
+
+                drawCopperDisc();
+                rings.forEach(drawRing);
+                drawOuterFixed();
+                drawFixedCenter();
+                drawNeedle();
+            }
+
+            function pointerInfo(event) {
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left - rect.width / 2;
+                const y = event.clientY - rect.top - rect.height / 2;
+                const r = Math.hypot(x, y) / radius;
+                const index = rings.findIndex(ring => r >= ring.inner && r <= ring.outer);
+                return { x, y, r, angle: Math.atan2(y, x), index };
+            }
+
+            function angularDelta(current, previous) {
+                let delta = current - previous;
+                if (delta > Math.PI) delta -= TAU;
+                if (delta < -Math.PI) delta += TAU;
+                return delta;
+            }
+
+            canvas.addEventListener('pointerdown', event => {
+                const p = pointerInfo(event);
+                if (p.index < 0) return;
+                canvas.setPointerCapture(event.pointerId);
+                drag = { index: p.index, lastAngle: p.angle, lastTime: performance.now(), velocity: 0 };
+                lastInteraction = performance.now();
+                canvas.classList.add('dragging');
+            });
+
+            canvas.addEventListener('pointermove', event => {
+                const p = pointerInfo(event);
+                hoverRing = p.index;
+                if (!drag) return;
+                const now = performance.now();
+                const delta = angularDelta(p.angle, drag.lastAngle);
+                const dt = Math.max(8, now - drag.lastTime);
+                rings[drag.index].angle += delta;
+                drag.velocity = drag.velocity * .58 + (delta / dt) * .42;
+                drag.lastAngle = p.angle;
+                drag.lastTime = now;
+                lastInteraction = now;
+            });
+
+            function releasePointer(event) {
+                if (!drag) return;
+                rings[drag.index].velocity = Math.max(-.025, Math.min(.025, drag.velocity));
+                lastInteraction = performance.now();
+                drag = null;
+                canvas.classList.remove('dragging');
+                if (event && canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+            }
+
+            canvas.addEventListener('pointerup', releasePointer);
+            canvas.addEventListener('pointercancel', releasePointer);
+            canvas.addEventListener('pointerleave', event => {
+                hoverRing = -1;
+                if (!drag) draw();
+            });
+
+            canvas.addEventListener('keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                event.preventDefault();
+                const index = hoverRing >= 0 ? hoverRing : 0;
+                const direction = event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 1;
+                rings[index].angle += direction * Math.PI / 36;
+                lastInteraction = performance.now();
+            });
+
+            if (document.fonts) {
+                Promise.all([
+                    document.fonts.load(`600 ${modelFontSize()}px "Noto Serif SC"`),
+                    document.fonts.load(`400 ${modelFontSize()}px "Ma Shan Zheng"`),
+                    document.fonts.load(`600 ${modelFontSize()}px "Ma Shan Zheng"`),
+                ]).then(() => {
+                    fontsReady = true;
+                    draw();
+                }).catch(() => {
+                    fontsReady = true;
+                    draw();
+                });
+            }
+
+            function animate(now) {
+                const dt = Math.min(34, now - lastTime);
+                lastTime = now;
+                const idle = now - lastInteraction > 600;
+                rings.forEach((ring, index) => {
+                    if (drag?.index === index) return;
+                    if (Math.abs(ring.velocity || 0) > .00001) {
+                        ring.angle += ring.velocity * dt;
+                        ring.velocity *= Math.pow(.965, dt / 16.67);
+                    } else if (!paused && idle) {
+                        ring.angle += ring.speed * dt;
+                    }
+                });
+                draw();
+                requestAnimationFrame(animate);
+            }
+
+            new ResizeObserver(resize).observe(canvas);
+            resize();
+            requestAnimationFrame(animate);
+        })();
+    </script>
+</body>
+</html>
